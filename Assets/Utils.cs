@@ -63,20 +63,6 @@ namespace Chess
         }
     }
 
-    public struct SimpleTuple3
-    {
-        object First;
-        object Second;
-        object Third;
-
-        public SimpleTuple3(object first, object second, object third)
-        {
-            First = first;
-            Second = second;
-            Third = third;
-        }
-    }
-
     public static class GlobalVals
     {
         static public int boardWidth = 7;

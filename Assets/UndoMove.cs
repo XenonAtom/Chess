@@ -59,6 +59,9 @@ namespace Chess
             {
                 GameObject.FindGameObjectWithTag(GlobalVals.ControllerTag).GetComponent<ChessControllerScript>()
                                                     .SwapPieces((Piece)swapPiece.Second, (Piece)swapPiece.First);
+
+                ((Piece)swapPiece.First).EnableVisual(true);
+                ((Piece)swapPiece.Second).DestroyVisual();
             }
         }
     }

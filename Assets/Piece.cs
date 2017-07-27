@@ -104,6 +104,11 @@ namespace Chess
             return possibleMoves.Contains(pos);
         }
 
+        public bool Threatens(Position pos)
+        {
+            return threatens.Contains(pos);
+        }
+
         /// <summary>
         /// Returns the list of possible moves for this piece
         /// </summary>
@@ -319,6 +324,11 @@ namespace Chess
             board[position.x][position.y].occupyingPiece = this;
             return canBlock;
         }
+
+        public void DestroyVisual()
+        {
+            GameObject.Destroy(img);
+        }
     }
 
     public class Pawn : Piece
@@ -358,6 +368,7 @@ namespace Chess
                 (!isWhite && position.y == 0))
             {
                 board[position.x][position.y].occupyingPiece = new Queen(isWhite, position, board);
+                board[position.x][position.y].occupyingPiece.CalculateMoves();
 
                 GameObject.FindGameObjectWithTag(GlobalVals.ControllerTag).GetComponent<ChessControllerScript>()
                                                                             .SwapPieces(this, board[position.x][position.y].occupyingPiece);
@@ -479,34 +490,58 @@ namespace Chess
 
             if (!hasMoved)
             {
-                var rookPos = new Position(GlobalVals.boardWidth, position.y);
-                int x;
+                List<Piece> enemies = new List<Piece>();
 
-                for (x = position.x + 1; x < rookPos.x; ++x)
+                for (int x = 0; x <= GlobalVals.boardWidth; ++x)
                 {
-                    if (board[x][position.y].occupyingPiece != null)
+                    for (int y = 0; y <= GlobalVals.boardHeight; ++y)
+                    {
+                        if (board[x][y].occupyingPiece != null && board[x][y].occupyingPiece.isWhite != isWhite)
+                        {
+                            enemies.Add(board[x][y].occupyingPiece);
+                        }
+                    }
+                }
+
+                var rookPos = new Position(GlobalVals.boardWidth, position.y);
+                int loopVar;
+
+                for (loopVar = position.x + 1; loopVar < rookPos.x; ++loopVar)
+                {
+                    if (board[loopVar][position.y].occupyingPiece != null)
                     {
                         break;
                     }
                 }
 
-                if (x == rookPos.x && board[rookPos.x][rookPos.y].occupyingPiece != null && !board[rookPos.x][rookPos.y].occupyingPiece.hasMoved)
+                if (loopVar == rookPos.x 
+                    && board[rookPos.x][rookPos.y].occupyingPiece != null 
+                    && !board[rookPos.x][rookPos.y].occupyingPiece.hasMoved
+                    && !enemies.Any(piece => piece.Threatens(new Position(position.x + 1, position.y))))
                 {
                     possibleMoves.Add(position.GetOffsetPosition(2, 0));
                 }
 
                 rookPos = new Position(0, position.y);
-                for (x = position.x - 1; x > rookPos.x; --x)
+                for (loopVar = position.x - 1; loopVar > rookPos.x; --loopVar)
                 {
-                    if (board[x][position.y].occupyingPiece != null)
+                    if (board[loopVar][position.y].occupyingPiece != null)
                     {
                         break;
                     }
                 }
 
-                if (x == rookPos.x && board[rookPos.x][rookPos.y].occupyingPiece != null && !board[rookPos.x][rookPos.y].occupyingPiece.hasMoved)
+                if (loopVar == rookPos.x 
+                    && board[rookPos.x][rookPos.y].occupyingPiece != null 
+                    && !board[rookPos.x][rookPos.y].occupyingPiece.hasMoved
+                    && !enemies.Any(piece => piece.Threatens(new Position(position.x - 1, position.y))))
                 {
                     possibleMoves.Add(position.GetOffsetPosition(-2, 0));
+                }
+
+                foreach (var enemy in enemies)
+                {
+                    possibleMoves = possibleMoves.Where(move => !(enemy.Threatens(move))).ToList();
                 }
             }
         }
